@@ -1,0 +1,237 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-17T16:18:30.963789",
+    "cycles_analyzed": 4,
+    "cycle_length_days": 7
+  },
+  "cycles": [
+    {
+      "cycle_name": "W42",
+      "period": {
+        "since": "2025-10-20",
+        "until": "2025-10-27"
+      },
+      "commits": 38,
+      "conventional_commits": 30,
+      "issues_referenced": [
+        72,
+        67,
+        68,
+        53
+      ],
+      "breaking_changes": 0,
+      "commit_types": {
+        "feat": 20,
+        "chore": 5,
+        "docs": 3,
+        "refactor": 2
+      },
+      "contributors": {
+        "Matthew Pazaryna": 38
+      },
+      "repositories": {
+        "mpazaryna/authentic-advantage": {
+          "commits": 6,
+          "conventional_commits": 5
+        },
+        "mpazaryna/chiro": {
+          "commits": 32,
+          "conventional_commits": 25
+        }
+      },
+      "daily_commits": {
+        "2025-10-20": 8,
+        "2025-10-27": 3,
+        "2025-10-21": 9,
+        "2025-10-22": 7,
+        "2025-10-23": 2,
+        "2025-10-24": 8,
+        "2025-10-26": 1
+      },
+      "issues_completed": 4,
+      "conventional_percentage": 78.94736842105263
+    },
+    {
+      "cycle_name": "W43",
+      "period": {
+        "since": "2025-10-27",
+        "until": "2025-11-03"
+      },
+      "commits": 21,
+      "conventional_commits": 19,
+      "issues_referenced": [
+        7
+      ],
+      "breaking_changes": 0,
+      "commit_types": {
+        "feat": 8,
+        "chore": 3,
+        "refactor": 1,
+        "fix": 6,
+        "docs": 1
+      },
+      "contributors": {
+        "Matthew Pazaryna": 21
+      },
+      "repositories": {
+        "mpazaryna/authentic-advantage": {
+          "commits": 8,
+          "conventional_commits": 7
+        },
+        "mpazaryna/chiro": {
+          "commits": 11,
+          "conventional_commits": 11
+        },
+        "j-bouchard/ai-fundraising-v2": {
+          "commits": 2,
+          "conventional_commits": 1
+        }
+      },
+      "daily_commits": {
+        "2025-10-27": 3,
+        "2025-10-28": 2,
+        "2025-11-01": 1,
+        "2025-11-02": 3,
+        "2025-10-31": 10,
+        "2025-11-03": 2
+      },
+      "issues_completed": 1,
+      "conventional_percentage": 90.47619047619048
+    },
+    {
+      "cycle_name": "W44",
+      "period": {
+        "since": "2025-11-03",
+        "until": "2025-11-10"
+      },
+      "commits": 43,
+      "conventional_commits": 22,
+      "issues_referenced": [
+        7,
+        73,
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        18,
+        19
+      ],
+      "breaking_changes": 0,
+      "commit_types": {
+        "feat": 10,
+        "docs": 7,
+        "chore": 4,
+        "refactor": 1
+      },
+      "contributors": {
+        "Matthew Pazaryna": 35,
+        "joeboucahrd": 8
+      },
+      "repositories": {
+        "mpazaryna/chiro": {
+          "commits": 14,
+          "conventional_commits": 10
+        },
+        "j-bouchard/ai-fundraising-v2": {
+          "commits": 29,
+          "conventional_commits": 12
+        }
+      },
+      "daily_commits": {
+        "2025-11-06": 2,
+        "2025-11-07": 4,
+        "2025-11-08": 3,
+        "2025-11-10": 9,
+        "2025-11-03": 2,
+        "2025-11-04": 17,
+        "2025-11-05": 6
+      },
+      "issues_completed": 10,
+      "conventional_percentage": 51.162790697674424
+    },
+    {
+      "cycle_name": "W45",
+      "period": {
+        "since": "2025-11-10",
+        "until": "2025-11-17"
+      },
+      "commits": 41,
+      "conventional_commits": 23,
+      "issues_referenced": [
+        64,
+        65,
+        74,
+        75,
+        80,
+        81,
+        63
+      ],
+      "breaking_changes": 0,
+      "commit_types": {
+        "chore": 6,
+        "fix": 3,
+        "refactor": 2,
+        "feat": 7,
+        "docs": 4,
+        "build": 1
+      },
+      "contributors": {
+        "Matthew Pazaryna": 41
+      },
+      "repositories": {
+        "mpazaryna/authentic-advantage": {
+          "commits": 5,
+          "conventional_commits": 3
+        },
+        "mpazaryna/chiro": {
+          "commits": 27,
+          "conventional_commits": 15
+        },
+        "mpazaryna/synthetic-app": {
+          "commits": 7,
+          "conventional_commits": 4
+        },
+        "mpazaryna/synthetic-notes": {
+          "commits": 2,
+          "conventional_commits": 1
+        }
+      },
+      "daily_commits": {
+        "2025-11-14": 8,
+        "2025-11-17": 9,
+        "2025-11-10": 9,
+        "2025-11-11": 4,
+        "2025-11-12": 8,
+        "2025-11-13": 3
+      },
+      "issues_completed": 7,
+      "conventional_percentage": 56.09756097560976
+    }
+  ],
+  "averages": {
+    "commits_per_cycle": 35.75,
+    "issues_per_cycle": 5.5,
+    "conventional_percentage": 69.17097764263183
+  },
+  "trends": {
+    "commits": {
+      "direction": "down",
+      "change": -2
+    },
+    "issues": {
+      "direction": "down",
+      "change": -3
+    },
+    "quality": {
+      "direction": "up",
+      "change": 4.9347702779353355
+    },
+    "velocity": {
+      "avg_commits": 35.0,
+      "avg_issues": 6.0,
+      "trend": "declining"
+    }
+  }
+}

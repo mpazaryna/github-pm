@@ -88,6 +88,8 @@ uv run python workflows/summarization/repo_comparison.py --model mistral
 ```
 
 #### Code Analysis (Commits)
+
+**Single Repository Analysis:**
 ```bash
 # Analyze commit messages for a repo
 uv run python workflows/code_analysis/commit_report.py \
@@ -101,6 +103,46 @@ uv run python scripts/run_workflow.py code_analysis commit_report \
   --owner mpazaryna \
   --repo chiro \
   --since 2025-01-01
+```
+
+**Multi-Repository Activity Reports:**
+```bash
+# Today's activity across all repos
+uv run python workflows/code_analysis/daily_activity.py
+
+# Last 2 days
+uv run python workflows/code_analysis/daily_activity.py --days 2
+
+# Last week
+uv run python workflows/code_analysis/daily_activity.py --days 7
+
+# Custom config and output
+uv run python workflows/code_analysis/daily_activity.py \
+  --config config/collection/production.yaml \
+  --days 1 \
+  --output reports/daily/today.md \
+  --format both
+```
+
+**Period Comparison (This Week vs Last Week):**
+```bash
+# Compare last 7 days vs previous 7 days
+uv run python workflows/code_analysis/period_comparison.py --days 7
+
+# Compare last 2 days vs previous 2 days
+uv run python workflows/code_analysis/period_comparison.py --days 2
+
+# Compare last 30 days vs previous 30 days (monthly)
+uv run python workflows/code_analysis/period_comparison.py --days 30
+
+# Compare last 90 days vs previous 90 days (quarterly)
+uv run python workflows/code_analysis/period_comparison.py --days 90
+
+# Custom output
+uv run python workflows/code_analysis/period_comparison.py \
+  --days 7 \
+  --output reports/weekly/comparison.md \
+  --format both
 ```
 
 #### AI-Powered Weekly Planning
@@ -123,6 +165,116 @@ gh label create "status:ready" --color "0E8A16" --description "Issue is ready to
 gh label create "status:in progress" --color "FBCA04" --description "Issue is currently being worked on"
 gh label create "status:in review" --color "1D76DB" --description "Issue is in review/PR stage"
 ```
+
+#### Velocity Tracking
+```bash
+# Track velocity over last 6 weeks
+uv run python workflows/metrics/velocity_tracker.py
+
+# Last 4 sprints (14-day cycles)
+uv run python workflows/metrics/velocity_tracker.py --cycles 4 --cycle-length 14
+
+# Last 12 months (30-day cycles)
+uv run python workflows/metrics/velocity_tracker.py --cycles 12 --cycle-length 30
+
+# Custom output
+uv run python workflows/metrics/velocity_tracker.py \
+  --cycles 6 \
+  --cycle-length 7 \
+  --output reports/metrics/velocity.md \
+  --format both
+```
+
+**Tracks:**
+- Issues completed per cycle
+- Commit volume trends
+- Code quality (conventional commits %)
+- Work distribution by type
+- Contributor velocity
+- Velocity trends (improving/declining)
+
+#### Roadmap Planning
+```bash
+# Generate roadmap from GitHub milestones
+uv run python workflows/planning/roadmap_generator.py
+
+# Use 60-day velocity sample
+uv run python workflows/planning/roadmap_generator.py --velocity-days 60
+
+# Custom output
+uv run python workflows/planning/roadmap_generator.py \
+  --output reports/planning/roadmap.md \
+  --format both
+```
+
+**Shows:**
+- All milestones with due dates
+- Progress tracking (completed/total issues)
+- Predicted completion dates based on actual velocity
+- Health status (on track, at risk, overdue)
+- Visual timeline (Mermaid Gantt chart)
+- Critical milestones needing attention
+
+#### Web Dashboard
+
+For complete dashboard documentation, see `docs/DASHBOARD.md`.
+
+**Quick Commands (Recommended):**
+```bash
+# Start dashboard (runs in background)
+uv run dashboard start
+
+# Start on custom port
+uv run dashboard start --port 8080
+
+# Check status
+uv run dashboard status
+
+# View logs
+uv run dashboard logs
+
+# Follow logs (live)
+uv run dashboard logs --follow
+
+# Restart dashboard
+uv run dashboard restart
+
+# Stop dashboard
+uv run dashboard stop
+```
+
+**Direct Server (Foreground):**
+```bash
+# Start the Streamlit dashboard directly
+uv run streamlit run workflows/dashboard/app.py
+
+# Custom port
+uv run streamlit run workflows/dashboard/app.py --server.port 8080
+```
+
+**Features:**
+- Interactive Streamlit dashboard at `http://localhost:5000`
+- Built-in widgets:
+  - Date range selector (presets + custom)
+  - Refresh button
+  - Interactive metrics with deltas
+  - Expandable milestone details
+- Shows:
+  - Period activity (commits, issues, repos, code quality)
+  - Period comparison with trend indicators
+  - Velocity trends (last 6 weeks)
+  - Roadmap status with critical milestones
+  - Repository activity table
+  - Work distribution chart
+- Auto-caching (5 minute TTL)
+- Pure Python (no HTML/CSS/JS)
+- Runs locally, no external services
+
+**Use Cases:**
+- Leave running on second monitor for real-time visibility
+- Share link with team (if running on network with `--host 0.0.0.0`)
+- Project status meetings (open in browser, show live data)
+- Personal productivity tracking
 
 #### Run All Workflows
 ```bash
@@ -426,9 +578,18 @@ Tests use pytest with mocking via `pytest-mock`. Key patterns:
 
 ## Dependencies
 
-- **Runtime**: `pyyaml`, `python-dateutil`, `langchain`, `langchain-ollama`
+- **Runtime**: `pyyaml`, `python-dateutil`, `langchain`, `langchain-ollama`, `streamlit`
 - **Dev**: `pytest`, `pytest-cov`, `pytest-mock`
 - **External**:
   - GitHub CLI (`gh`) must be installed and authenticated
   - Ollama (optional, for AI-powered summarization workflows)
 - **Python**: Requires 3.11+ (uses modern type hints like `dict[str, Any]`)
+
+## Documentation
+
+- **`CLAUDE.md`** (this file) - Project overview, commands, and architecture
+- **`docs/AGENTIC_VISION.md`** - Vision and principles for agentic coding workflows
+- **`docs/ENGINEERING_MANAGER_GUIDE.md`** - Guide for engineering managers using GitHub PM
+- **`docs/MULTI_AGENT_WORKFLOW.md`** - Multi-agent coordination patterns and workflows
+- **`docs/DASHBOARD.md`** - Complete dashboard documentation with commands and troubleshooting
+- **`workflows/planning/STATUS_LABELS_GUIDE.md`** - Setup guide for status labels and workflow tracking

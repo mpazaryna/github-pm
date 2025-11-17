@@ -1,0 +1,353 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-17T16:20:11.884053",
+    "repositories": 6,
+    "velocity_sample_days": 30
+  },
+  "repositories": {
+    "mpazaryna/authentic-advantage": {
+      "owner": "mpazaryna",
+      "name": "authentic-advantage",
+      "velocity": {
+        "issues_per_week": 0.7000000000000001,
+        "commits_per_week": 6.3,
+        "sample_period_days": 30
+      },
+      "milestones": [
+        {
+          "title": "VOICE + REIMAGINE Core",
+          "state": "open",
+          "description": "Backend-ready quick wins: LinkedIn Post Generator, Professional Bio Generator, Career Possibilities Explorer, Simple Goal Setting. Target: Nov 2025",
+          "total_issues": 4,
+          "completed": 0,
+          "remaining": 4,
+          "progress_percentage": 0.0,
+          "due_date": null,
+          "days_until_due": null,
+          "predicted_completion": "2025-12-27T16:20:12.671421",
+          "predicted_days_remaining": 39,
+          "velocity": {
+            "issues_per_week": 0.7000000000000001,
+            "commits_per_week": 6.3,
+            "sample_period_days": 30
+          },
+          "health": "no_deadline",
+          "repository": "mpazaryna/authentic-advantage"
+        },
+        {
+          "title": "Phase 3: HIGHLIGHT Dashboard",
+          "state": "open",
+          "description": "Skills and achievements visualization: Summary dashboards, bar charts, proficiency tracking. Optional for MVP.",
+          "total_issues": 4,
+          "completed": 0,
+          "remaining": 4,
+          "progress_percentage": 0.0,
+          "due_date": null,
+          "days_until_due": null,
+          "predicted_completion": "2025-12-27T16:20:12.671442",
+          "predicted_days_remaining": 39,
+          "velocity": {
+            "issues_per_week": 0.7000000000000001,
+            "commits_per_week": 6.3,
+            "sample_period_days": 30
+          },
+          "health": "no_deadline",
+          "repository": "mpazaryna/authentic-advantage"
+        },
+        {
+          "title": "Phase 4: IMPLEMENT + EVOLVE Core",
+          "state": "open",
+          "description": "Learning and growth tracking: Learning Path Recommendations, Milestone Tracking, Simple Analytics, Progress Tracking. Target: Dec 2025",
+          "total_issues": 4,
+          "completed": 0,
+          "remaining": 4,
+          "progress_percentage": 0.0,
+          "due_date": null,
+          "days_until_due": null,
+          "predicted_completion": "2025-12-27T16:20:12.671448",
+          "predicted_days_remaining": 39,
+          "velocity": {
+            "issues_per_week": 0.7000000000000001,
+            "commits_per_week": 6.3,
+            "sample_period_days": 30
+          },
+          "health": "no_deadline",
+          "repository": "mpazaryna/authentic-advantage"
+        },
+        {
+          "title": "Phase 5: Quality & Infrastructure",
+          "state": "open",
+          "description": "Technical debt and polish: UI Tests, Test Coverage, Error Handling, User Onboarding, Settings UI",
+          "total_issues": 5,
+          "completed": 0,
+          "remaining": 5,
+          "progress_percentage": 0.0,
+          "due_date": null,
+          "days_until_due": null,
+          "predicted_completion": "2026-01-06T16:20:12.671452",
+          "predicted_days_remaining": 49,
+          "velocity": {
+            "issues_per_week": 0.7000000000000001,
+            "commits_per_week": 6.3,
+            "sample_period_days": 30
+          },
+          "health": "no_deadline",
+          "repository": "mpazaryna/authentic-advantage"
+        },
+        {
+          "title": "Compass",
+          "state": "open",
+          "description": "All items related to CompassKit",
+          "total_issues": 1,
+          "completed": 0,
+          "remaining": 1,
+          "progress_percentage": 0.0,
+          "due_date": null,
+          "days_until_due": null,
+          "predicted_completion": "2025-11-27T16:20:12.671456",
+          "predicted_days_remaining": 9,
+          "velocity": {
+            "issues_per_week": 0.7000000000000001,
+            "commits_per_week": 6.3,
+            "sample_period_days": 30
+          },
+          "health": "no_deadline",
+          "repository": "mpazaryna/authentic-advantage"
+        }
+      ]
+    },
+    "mpazaryna/chiro": {
+      "owner": "mpazaryna",
+      "name": "chiro",
+      "velocity": {
+        "issues_per_week": 2.3333333333333335,
+        "commits_per_week": 20.3,
+        "sample_period_days": 30
+      },
+      "milestones": [
+        {
+          "title": "TestFlight v1.0 (Nov 2025)",
+          "state": "open",
+          "description": "Critical QA and stability for TestFlight beta release",
+          "total_issues": 5,
+          "completed": 3,
+          "remaining": 2,
+          "progress_percentage": 60.0,
+          "due_date": "2025-10-31T07:00:00+00:00",
+          "days_until_due": -18,
+          "predicted_completion": "2025-11-23T16:20:13.311575",
+          "predicted_days_remaining": 5,
+          "velocity": {
+            "issues_per_week": 2.3333333333333335,
+            "commits_per_week": 20.3,
+            "sample_period_days": 30
+          },
+          "health": "overdue",
+          "repository": "mpazaryna/chiro"
+        },
+        {
+          "title": "App Store v1.0 (Dec 2025)",
+          "state": "open",
+          "description": "Polish, visualizations, and TestFlight feedback - ready for general release",
+          "total_issues": 3,
+          "completed": 1,
+          "remaining": 2,
+          "progress_percentage": 33.33333333333333,
+          "due_date": "2025-12-30T08:00:00+00:00",
+          "days_until_due": 42,
+          "predicted_completion": "2025-11-23T16:20:13.311816",
+          "predicted_days_remaining": 5,
+          "velocity": {
+            "issues_per_week": 2.3333333333333335,
+            "commits_per_week": 20.3,
+            "sample_period_days": 30
+          },
+          "health": "good",
+          "repository": "mpazaryna/chiro"
+        },
+        {
+          "title": "Future Enhancements",
+          "state": "open",
+          "description": "Post-launch features, research items, and v2.0 planning - no deadline",
+          "total_issues": 10,
+          "completed": 0,
+          "remaining": 10,
+          "progress_percentage": 0.0,
+          "due_date": "2026-02-01T08:00:00+00:00",
+          "days_until_due": 75,
+          "predicted_completion": "2025-12-17T16:20:13.311831",
+          "predicted_days_remaining": 29,
+          "velocity": {
+            "issues_per_week": 2.3333333333333335,
+            "commits_per_week": 20.3,
+            "sample_period_days": 30
+          },
+          "health": "good",
+          "repository": "mpazaryna/chiro"
+        }
+      ]
+    }
+  },
+  "all_milestones": [
+    {
+      "title": "TestFlight v1.0 (Nov 2025)",
+      "state": "open",
+      "description": "Critical QA and stability for TestFlight beta release",
+      "total_issues": 5,
+      "completed": 3,
+      "remaining": 2,
+      "progress_percentage": 60.0,
+      "due_date": "2025-10-31T07:00:00+00:00",
+      "days_until_due": -18,
+      "predicted_completion": "2025-11-23T16:20:13.311575",
+      "predicted_days_remaining": 5,
+      "velocity": {
+        "issues_per_week": 2.3333333333333335,
+        "commits_per_week": 20.3,
+        "sample_period_days": 30
+      },
+      "health": "overdue",
+      "repository": "mpazaryna/chiro"
+    },
+    {
+      "title": "App Store v1.0 (Dec 2025)",
+      "state": "open",
+      "description": "Polish, visualizations, and TestFlight feedback - ready for general release",
+      "total_issues": 3,
+      "completed": 1,
+      "remaining": 2,
+      "progress_percentage": 33.33333333333333,
+      "due_date": "2025-12-30T08:00:00+00:00",
+      "days_until_due": 42,
+      "predicted_completion": "2025-11-23T16:20:13.311816",
+      "predicted_days_remaining": 5,
+      "velocity": {
+        "issues_per_week": 2.3333333333333335,
+        "commits_per_week": 20.3,
+        "sample_period_days": 30
+      },
+      "health": "good",
+      "repository": "mpazaryna/chiro"
+    },
+    {
+      "title": "Future Enhancements",
+      "state": "open",
+      "description": "Post-launch features, research items, and v2.0 planning - no deadline",
+      "total_issues": 10,
+      "completed": 0,
+      "remaining": 10,
+      "progress_percentage": 0.0,
+      "due_date": "2026-02-01T08:00:00+00:00",
+      "days_until_due": 75,
+      "predicted_completion": "2025-12-17T16:20:13.311831",
+      "predicted_days_remaining": 29,
+      "velocity": {
+        "issues_per_week": 2.3333333333333335,
+        "commits_per_week": 20.3,
+        "sample_period_days": 30
+      },
+      "health": "good",
+      "repository": "mpazaryna/chiro"
+    },
+    {
+      "title": "VOICE + REIMAGINE Core",
+      "state": "open",
+      "description": "Backend-ready quick wins: LinkedIn Post Generator, Professional Bio Generator, Career Possibilities Explorer, Simple Goal Setting. Target: Nov 2025",
+      "total_issues": 4,
+      "completed": 0,
+      "remaining": 4,
+      "progress_percentage": 0.0,
+      "due_date": null,
+      "days_until_due": null,
+      "predicted_completion": "2025-12-27T16:20:12.671421",
+      "predicted_days_remaining": 39,
+      "velocity": {
+        "issues_per_week": 0.7000000000000001,
+        "commits_per_week": 6.3,
+        "sample_period_days": 30
+      },
+      "health": "no_deadline",
+      "repository": "mpazaryna/authentic-advantage"
+    },
+    {
+      "title": "Phase 3: HIGHLIGHT Dashboard",
+      "state": "open",
+      "description": "Skills and achievements visualization: Summary dashboards, bar charts, proficiency tracking. Optional for MVP.",
+      "total_issues": 4,
+      "completed": 0,
+      "remaining": 4,
+      "progress_percentage": 0.0,
+      "due_date": null,
+      "days_until_due": null,
+      "predicted_completion": "2025-12-27T16:20:12.671442",
+      "predicted_days_remaining": 39,
+      "velocity": {
+        "issues_per_week": 0.7000000000000001,
+        "commits_per_week": 6.3,
+        "sample_period_days": 30
+      },
+      "health": "no_deadline",
+      "repository": "mpazaryna/authentic-advantage"
+    },
+    {
+      "title": "Phase 4: IMPLEMENT + EVOLVE Core",
+      "state": "open",
+      "description": "Learning and growth tracking: Learning Path Recommendations, Milestone Tracking, Simple Analytics, Progress Tracking. Target: Dec 2025",
+      "total_issues": 4,
+      "completed": 0,
+      "remaining": 4,
+      "progress_percentage": 0.0,
+      "due_date": null,
+      "days_until_due": null,
+      "predicted_completion": "2025-12-27T16:20:12.671448",
+      "predicted_days_remaining": 39,
+      "velocity": {
+        "issues_per_week": 0.7000000000000001,
+        "commits_per_week": 6.3,
+        "sample_period_days": 30
+      },
+      "health": "no_deadline",
+      "repository": "mpazaryna/authentic-advantage"
+    },
+    {
+      "title": "Phase 5: Quality & Infrastructure",
+      "state": "open",
+      "description": "Technical debt and polish: UI Tests, Test Coverage, Error Handling, User Onboarding, Settings UI",
+      "total_issues": 5,
+      "completed": 0,
+      "remaining": 5,
+      "progress_percentage": 0.0,
+      "due_date": null,
+      "days_until_due": null,
+      "predicted_completion": "2026-01-06T16:20:12.671452",
+      "predicted_days_remaining": 49,
+      "velocity": {
+        "issues_per_week": 0.7000000000000001,
+        "commits_per_week": 6.3,
+        "sample_period_days": 30
+      },
+      "health": "no_deadline",
+      "repository": "mpazaryna/authentic-advantage"
+    },
+    {
+      "title": "Compass",
+      "state": "open",
+      "description": "All items related to CompassKit",
+      "total_issues": 1,
+      "completed": 0,
+      "remaining": 1,
+      "progress_percentage": 0.0,
+      "due_date": null,
+      "days_until_due": null,
+      "predicted_completion": "2025-11-27T16:20:12.671456",
+      "predicted_days_remaining": 9,
+      "velocity": {
+        "issues_per_week": 0.7000000000000001,
+        "commits_per_week": 6.3,
+        "sample_period_days": 30
+      },
+      "health": "no_deadline",
+      "repository": "mpazaryna/authentic-advantage"
+    }
+  ]
+}
