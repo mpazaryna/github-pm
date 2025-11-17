@@ -13,6 +13,8 @@ A Python-based GitHub CLI tool that retrieves and organizes issues from multiple
 - **Agentic Workflow Analysis**:
   - **Trend Analysis** - Compare snapshots to identify patterns and changes
   - **AI-Powered Summarization** - LangChain + Ollama for repository comparisons and insights
+  - **Code Analysis** - Analyze commit messages, work patterns, and delivery metrics
+  - **Weekly Planning** - AI-powered sprint planning and work distribution recommendations
   - **Anomaly Detection** - Flag unusual patterns and stale issues (coming soon)
   - **Custom Reports** - Stakeholder-specific reports (coming soon)
 
@@ -239,6 +241,95 @@ uv run python workflows/summarization/repo_comparison.py --model mistral
 - Workload distribution insights
 - Notable themes and trends
 - Actionable recommendations
+
+#### Code Analysis (Commit Reports)
+
+Analyze actual code changes to understand what work was delivered:
+
+```bash
+# Analyze commits for a specific repo
+uv run python workflows/code_analysis/commit_report.py \
+  --owner mpazaryna \
+  --repo chiro \
+  --since 2025-01-01 \
+  --correlate-issues
+
+# Via orchestration script
+uv run python scripts/run_workflow.py code_analysis commit_report \
+  --owner mpazaryna \
+  --repo chiro
+```
+
+**Commit analysis provides:**
+- Work breakdown by type (features, fixes, docs, refactors)
+- Conventional Commits compliance tracking
+- Issue correlation (which commits reference which issues)
+- Breaking change detection
+- Contributor activity patterns
+- Daily activity timeline
+
+**Perfect for:**
+- Weekly status reports showing actual delivery
+- Understanding what types of work are being done
+- Correlating planned work (issues) with delivered work (commits)
+- Tracking commit quality and conventions
+
+#### AI-Powered Weekly Planning
+
+**The killer feature:** Balance work across multiple concurrent projects with AI assistance.
+
+```bash
+# Generate AI-powered weekly plan
+uv run python workflows/planning/weekly_planner.py
+
+# Look back 14 days for better trends
+uv run python workflows/planning/weekly_planner.py --days 14
+```
+
+**What the AI analyzes:**
+1. Last week's commit distribution (% effort per repo)
+2. Current backlog state (open issues, priorities, unassigned)
+3. Work imbalances (neglected repositories)
+
+**What you get:**
+- **Work Distribution Analysis** - "authentic-advantage got 0% commits (neglected!)"
+- **Recommended Rebalancing** - "Next week: 20% authentic-advantage, 40% chiro, 40% ai-fundraising"
+- **Specific Issue Priorities** - "Work on #37, #15, #10 to maintain balance"
+- **Strategic Recommendations** - CI/CD suggestions, process improvements
+
+**Perfect for:**
+- Managing 2-3 concurrent projects
+- Ensuring no project gets completely neglected
+- Data-driven sprint planning
+- Balancing feature work across multiple repos
+
+**Enables agentic programming across concurrent work streams!**
+
+**Enhanced with Status Flow Analysis:**
+
+To get the most out of weekly planning, set up status labels in your repositories:
+
+```bash
+# Quick setup for all your repos
+gh label create "status:backlog" --color "D4C5F9" --description "Issue is in the backlog"
+gh label create "status:ready" --color "0E8A16" --description "Issue is ready to be worked on"
+gh label create "status:in progress" --color "FBCA04" --description "Issue is currently being worked on"
+gh label create "status:in review" --color "1D76DB" --description "Issue is in review/PR stage"
+```
+
+**See [Status Labels Setup Guide](workflows/planning/STATUS_LABELS_GUIDE.md) for:**
+- Complete setup instructions (CLI + Web UI)
+- Workflow best practices
+- Bulk operations for existing issues
+- WIP limit recommendations
+- Troubleshooting tips
+
+With status labels, the weekly planner provides:
+- **Flow Health Analysis** - Identify bottlenecks (e.g., too many Ready but not In Progress)
+- **Milestone Progress** - Track velocity and risk for time-bound milestones
+- **WIP Management** - Ensure you're not overloaded with work in progress
+- **Grooming Recommendations** - Know when to prepare more work
+- **Priority Issues by Status** - See exactly which issues to work on next
 
 #### Example Trend Report
 

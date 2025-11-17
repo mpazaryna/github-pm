@@ -60,12 +60,45 @@ def run_summarization(workflow: str, snapshot: str | None, model: str):
         sys.exit(1)
 
 
+def run_code_analysis(
+    workflow: str, owner: str, repo: str, since: str | None, limit: int
+):
+    """Run code analysis workflow."""
+    if workflow == "commit_report":
+        cmd = [
+            "uv",
+            "run",
+            "python",
+            "workflows/code_analysis/commit_report.py",
+            "--owner",
+            owner,
+            "--repo",
+            repo,
+            "--limit",
+            str(limit),
+            "--correlate-issues",
+        ]
+        if since:
+            cmd.extend(["--since", since])
+        print(f"Running: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
+    else:
+        print(f"Unknown code analysis workflow: {workflow}")
+        sys.exit(1)
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Run GitHub PM workflows")
     parser.add_argument(
         "category",
-        choices=["trend_analysis", "summarization", "anomaly_detection", "custom_reports"],
+        choices=[
+            "trend_analysis",
+            "summarization",
+            "code_analysis",
+            "anomaly_detection",
+            "custom_reports",
+        ],
         help="Workflow category",
     )
     parser.add_argument(
@@ -89,6 +122,24 @@ def main():
         "--model",
         default="llama3.2",
         help="Ollama model to use for summarization workflows (default: llama3.2)",
+    )
+    parser.add_argument(
+        "--owner",
+        help="Repository owner (for code analysis)",
+    )
+    parser.add_argument(
+        "--repo",
+        help="Repository name (for code analysis)",
+    )
+    parser.add_argument(
+        "--since",
+        help="Start date for commit analysis (YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="Maximum commits to analyze (default: 100)",
     )
 
     args = parser.parse_args()
@@ -123,6 +174,15 @@ def main():
 
         print(f"Analyzing snapshot: {snapshot}")
         run_summarization(args.workflow, snapshot, args.model)
+
+    elif args.category == "code_analysis":
+        if not args.owner or not args.repo:
+            print("Error: --owner and --repo are required for code analysis")
+            sys.exit(1)
+
+        run_code_analysis(
+            args.workflow, args.owner, args.repo, args.since, args.limit
+        )
 
     elif args.category == "anomaly_detection":
         print("Anomaly detection workflows coming soon!")

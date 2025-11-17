@@ -87,6 +87,43 @@ uv run python scripts/run_workflow.py summarization repo_comparison --model llam
 uv run python workflows/summarization/repo_comparison.py --model mistral
 ```
 
+#### Code Analysis (Commits)
+```bash
+# Analyze commit messages for a repo
+uv run python workflows/code_analysis/commit_report.py \
+  --owner mpazaryna \
+  --repo chiro \
+  --since 2025-01-01 \
+  --correlate-issues
+
+# Via orchestration script
+uv run python scripts/run_workflow.py code_analysis commit_report \
+  --owner mpazaryna \
+  --repo chiro \
+  --since 2025-01-01
+```
+
+#### AI-Powered Weekly Planning
+```bash
+# Generate AI-powered weekly plan
+uv run python workflows/planning/weekly_planner.py
+
+# Look back 14 days for better trends
+uv run python workflows/planning/weekly_planner.py --days 14
+
+# Use specific AI model
+uv run python workflows/planning/weekly_planner.py --model llama3.2
+```
+
+**Note:** Weekly planning works best with status labels. See `workflows/planning/STATUS_LABELS_GUIDE.md` for setup instructions:
+```bash
+# Quick setup of status labels
+gh label create "status:backlog" --color "D4C5F9" --description "Issue is in the backlog"
+gh label create "status:ready" --color "0E8A16" --description "Issue is ready to be worked on"
+gh label create "status:in progress" --color "FBCA04" --description "Issue is currently being worked on"
+gh label create "status:in review" --color "1D76DB" --description "Issue is in review/PR stage"
+```
+
 #### Run All Workflows
 ```bash
 # Execute all available workflows on collected data
@@ -143,7 +180,22 @@ The system has two main phases:
    - Summary statistics (counts by state, repo, label, milestone, assignee)
    - Organized data (pre-grouped by all criteria)
 
-6. **CLI** (`cli.py`) - Orchestrates the collection pipeline:
+6. **StatusAnalyzer** (`status_analyzer.py`) - Analyzes issue status and workflow health:
+   - Extracts status from label patterns (backlog, ready, in progress, in review, done)
+   - Analyzes flow health and detects bottlenecks
+   - Identifies grooming needs and WIP limit violations
+   - Tracks milestone progress with velocity calculations
+   - Calculates health indicators (overdue, at_risk, behind, on_track, good)
+   - Prioritizes issues by milestone, labels, and recency
+
+7. **CommitAnalyzer** (`commit_analyzer.py`) - Analyzes commit messages and work patterns:
+   - Parses Conventional Commits format (type(scope): description)
+   - Extracts issue references (#123, fixes #456)
+   - Tracks breaking changes
+   - Generates activity timelines
+   - Calculates work type distribution
+
+8. **CLI** (`cli.py`) - Orchestrates the collection pipeline:
    - Loads YAML configuration from `config/collection/`
    - Fetches issues from all configured repos
    - Adds `repository` field to each issue for tracking
@@ -167,8 +219,26 @@ Located in `workflows/` directory, organized by analysis type:
    - Generates natural language insights
    - Outputs reports to `reports/daily/`
 
-3. **Anomaly Detection** (`workflows/anomaly_detection/`) - Coming soon
-4. **Custom Reports** (`workflows/custom_reports/`) - Coming soon
+3. **Code Analysis** (`workflows/code_analysis/`)
+   - `commit_report.py` - Analyze commit messages and work patterns
+   - Parses Conventional Commits format
+   - Correlates commits with issues
+   - Shows work breakdown by type, activity timeline, breaking changes
+   - Outputs reports to `reports/adhoc/`
+
+4. **Weekly Planning** (`workflows/planning/`)
+   - `weekly_planner.py` - AI-powered weekly planning and work balancing
+   - Analyzes commit distribution across repositories
+   - Tracks status flow (backlog → ready → in progress → in review → done)
+   - Monitors milestone progress with velocity calculations
+   - Identifies flow bottlenecks and WIP issues
+   - Generates balanced work recommendations
+   - Outputs reports to `reports/weekly/`
+   - Requires: LangChain + Ollama for AI analysis
+   - See: `STATUS_LABELS_GUIDE.md` for setup instructions
+
+5. **Anomaly Detection** (`workflows/anomaly_detection/`) - Coming soon
+6. **Custom Reports** (`workflows/custom_reports/`) - Coming soon
 
 Workflows read configuration from `config/workflows/workflow_config.yaml` for thresholds and parameters.
 
@@ -211,6 +281,10 @@ github-pm/
 ├── workflows/                     # Analysis workflows
 │   ├── trend_analysis/           # Compare snapshots over time
 │   ├── summarization/            # Generate summaries
+│   ├── code_analysis/            # Commit analysis and work patterns
+│   ├── planning/                 # Weekly planning and work balancing
+│   │   ├── weekly_planner.py    # AI-powered weekly planning
+│   │   └── STATUS_LABELS_GUIDE.md  # Setup guide for status labels
 │   ├── anomaly_detection/        # Detect unusual patterns
 │   └── custom_reports/           # Stakeholder-specific reports
 │
@@ -294,6 +368,53 @@ Issues fetched from GitHub CLI include these fields (defined in `github_client.p
 - Read configuration from `config/workflows/workflow_config.yaml`
 - Should be runnable independently or via orchestration scripts
 - Trend analysis requires at least 2 snapshots to compare
+
+### Status Flow and Milestone Tracking
+
+The system tracks issue flow through status labels and milestone progress:
+
+#### Status Labels
+Status is extracted from issue labels using `StatusAnalyzer.extract_status()`:
+- **Backlog**: Issues not yet ready to be worked on
+- **Ready**: Groomed issues ready to start
+- **In Progress**: Currently being worked on
+- **In Review**: PR created, awaiting review
+- **Done**: Completed (closed issues)
+
+**Label Patterns Recognized:**
+- Case-insensitive matching
+- Multiple patterns per status (e.g., "wip", "work in progress", "status:in progress")
+- Falls back to: open → backlog, closed → done
+
+#### Flow Health Analysis
+`StatusAnalyzer.analyze_flow_health()` identifies bottlenecks:
+- **Ready Pileup**: Too many ready but not in progress (suggests need to start work)
+- **Review Bottleneck**: Too many in review (suggests need for reviews)
+- **Grooming Needed**: Too many backlog but not enough ready (suggests need for grooming)
+- **WIP Overload**: Too many items in progress + in review (suggests need to finish work)
+
+#### Milestone Progress Tracking
+`StatusAnalyzer.analyze_milestone_progress()` calculates:
+- **Progress percentage**: (done / total) * 100
+- **Velocity estimation**: Rough current velocity (1.5 issues/week default)
+- **Needed velocity**: remaining_issues / weeks_remaining
+- **Health indicators**:
+  - `overdue`: Past due date
+  - `at_risk`: Needed velocity > 2x current velocity
+  - `behind`: Needed velocity > 1.5x current velocity
+  - `on_track`: Progress > 80%
+  - `good`: On track
+  - `no_deadline`: No due date set
+
+#### Weekly Planning Integration
+The weekly planner (`weekly_planner.py`) uses StatusAnalyzer to:
+1. Show status distribution per repository
+2. Identify flow bottlenecks
+3. Track milestone progress and risks
+4. Recommend process improvements
+5. Prioritize issues by status, milestone, and labels
+
+**Setup:** See `workflows/planning/STATUS_LABELS_GUIDE.md` for complete setup instructions.
 
 ## Testing Approach
 
