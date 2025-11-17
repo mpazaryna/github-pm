@@ -1,0 +1,10 @@
+# GitHub PM Testing Configuration
+# Smaller dataset for quick testing
+
+repositories:
+  - owner: anthropics
+    name: anthropic-sdk-python
+
+# Test with smaller limit
+issue_state: open
+limit: 10

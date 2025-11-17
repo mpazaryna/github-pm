@@ -1,0 +1,19 @@
+# GitHub PM Configuration
+# Copy this to config.yaml and update with your repositories
+
+repositories:
+  - owner: anthropics
+    name: anthropic-sdk-python
+  - owner: openai
+    name: openai-python
+  - owner: langchain-ai
+    name: langchain
+
+# Optional: Filter issues by state
+issue_state: open  # open, closed, or all
+
+# Optional: Filter by labels
+labels: []  # e.g., ["bug", "enhancement"]
+
+# Optional: Limit number of issues per repo
+limit: 100

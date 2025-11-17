@@ -1,0 +1,29 @@
+[project]
+name = "github-pm"
+version = "0.1.0"
+description = "A GitHub CLI tool to retrieve and organize issues from multiple repositories"
+readme = "README.md"
+authors = [
+    { name = "Matthew Pazaryna", email = "52605785+mpazaryna@users.noreply.github.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "python-dateutil>=2.9.0.post0",
+    "pyyaml>=6.0.3",
+    "langchain>=0.3.0",
+    "langchain-ollama>=0.2.0",
+]
+
+[project.scripts]
+github-pm = "github_pm.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+]

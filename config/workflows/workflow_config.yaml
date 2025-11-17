@@ -1,0 +1,59 @@
+# Workflow Configuration
+
+# Trend Analysis Settings
+trend_analysis:
+  # Number of previous periods to compare
+  lookback_periods: 3
+
+  # Thresholds for flagging significant changes
+  significant_change_threshold: 0.20  # 20% change
+
+  # Metrics to track
+  metrics:
+    - total_issues
+    - open_issues
+    - closed_issues
+    - issues_by_label
+    - issues_by_assignee
+
+# Anomaly Detection Settings
+anomaly_detection:
+  # Issue age threshold (days) for stale detection
+  stale_threshold_days: 30
+
+  # Spike detection threshold (percentage increase)
+  spike_threshold: 0.50  # 50% increase
+
+  # Workload imbalance threshold
+  max_assignment_ratio: 3.0  # Flag if one person has 3x average
+
+# Summarization Settings
+summarization:
+  # Maximum items to show in summaries
+  max_top_items: 5
+
+  # Priority labels for highlighting
+  priority_labels:
+    - critical
+    - high-priority
+    - urgent
+    - bug
+
+# Custom Reports Settings
+custom_reports:
+  # Stakeholder groups and their interests
+  stakeholders:
+    executives:
+      - summary_statistics
+      - milestone_progress
+      - trend_overview
+
+    developers:
+      - assigned_issues
+      - label_breakdown
+      - recent_activity
+
+    product:
+      - feature_requests
+      - milestone_status
+      - customer_issues
