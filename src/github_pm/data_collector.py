@@ -24,6 +24,8 @@ class DataCollector:
         issues: list[dict[str, Any]],
         organized_data: dict[str, Any],
         config: dict[str, Any],
+        label: str = "snapshot",
+        date: str | None = None,
     ) -> Path:
         """
         Create a timestamped snapshot of collected data.
@@ -32,19 +34,27 @@ class DataCollector:
             issues: List of all issues
             organized_data: Pre-organized data by different criteria
             config: Configuration used for this collection
+            label: Snapshot label (e.g., "sod", "eod", "snapshot")
+            date: Date string (YYYY-MM-DD). If None, uses today's date.
 
         Returns:
-            Path to the snapshot directory
+            Path to the snapshot file
         """
-        # Create timestamped directory
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        snapshot_dir = self.base_data_dir / timestamp
-        snapshot_dir.mkdir(exist_ok=True)
+        # Use provided date or today's date
+        if date is None:
+            date = datetime.now().strftime("%Y-%m-%d")
 
-        # Save raw JSON data
-        raw_data = {
+        # Create filename: YYYY-MM-DD-label.json
+        filename = f"{date}-{label.lower()}.json"
+        snapshot_path = self.base_data_dir / filename
+
+        # Save snapshot data
+        snapshot_data = {
             "metadata": {
-                "collected_at": datetime.now().isoformat(),
+                "snapshot_date": date,
+                "snapshot_type": label.upper(),
+                "timestamp": datetime.now().isoformat(),
+                "generated_by": "github-pm",
                 "version": "0.1.0",
                 "total_issues": len(issues),
                 "repositories": [
@@ -58,20 +68,15 @@ class DataCollector:
             "organized": organized_data,
         }
 
-        raw_path = snapshot_dir / "raw.json"
-        raw_path.write_text(json.dumps(raw_data, indent=2))
+        snapshot_path.write_text(json.dumps(snapshot_data, indent=2))
 
-        # Save metadata separately for quick access
-        metadata_path = snapshot_dir / "metadata.json"
-        metadata_path.write_text(json.dumps(raw_data["metadata"], indent=2))
-
-        # Update 'latest' symlink
-        latest_link = self.base_data_dir / "latest"
+        # Update latest symlink for this label type
+        latest_link = self.base_data_dir / f"latest-{label.lower()}.json"
         if latest_link.exists() or latest_link.is_symlink():
             latest_link.unlink()
-        latest_link.symlink_to(timestamp, target_is_directory=True)
+        latest_link.symlink_to(filename, target_is_directory=False)
 
-        return snapshot_dir
+        return snapshot_path
 
     def _generate_summary(self, issues: list[dict[str, Any]]) -> dict[str, Any]:
         """
@@ -135,26 +140,40 @@ class DataCollector:
             "by_assignee": dict(assignee_counts),
         }
 
-    def list_snapshots(self) -> list[Path]:
+    def list_snapshots(self, label: str | None = None) -> list[Path]:
         """
         List all available snapshots in chronological order.
 
+        Args:
+            label: Optional label filter (e.g., "sod", "eod")
+
         Returns:
-            List of snapshot directory paths
+            List of snapshot file paths
         """
+        if label:
+            # Filter by label
+            pattern = f"*-{label.lower()}.json"
+        else:
+            # All snapshots (exclude latest-* symlinks)
+            pattern = "*.json"
+
         snapshots = [
-            d
-            for d in self.base_data_dir.iterdir()
-            if d.is_dir() and not d.name.startswith(".")
+            f
+            for f in self.base_data_dir.glob(pattern)
+            if f.is_file() and not f.name.startswith("latest-")
         ]
         return sorted(snapshots)
 
-    def load_snapshot(self, snapshot_path: Path | str) -> dict[str, Any]:
+    def load_snapshot(self, snapshot_identifier: Path | str) -> dict[str, Any]:
         """
         Load data from a snapshot.
 
         Args:
-            snapshot_path: Path to snapshot directory or timestamp string
+            snapshot_identifier: Can be:
+                - Full filename: "2025-01-18-sod.json"
+                - Date and label: "2025-01-18-sod"
+                - Label only: "latest-sod" or "sod" (loads latest)
+                - Path object
 
         Returns:
             Dictionary containing the snapshot data
@@ -162,12 +181,25 @@ class DataCollector:
         Raises:
             FileNotFoundError: If snapshot doesn't exist
         """
-        if isinstance(snapshot_path, str):
-            snapshot_path = self.base_data_dir / snapshot_path
+        if isinstance(snapshot_identifier, Path):
+            snapshot_path = snapshot_identifier
+        else:
+            # Handle different identifier formats
+            if snapshot_identifier in ["latest-sod", "latest-eod", "latest-snapshot"]:
+                # Load from symlink
+                snapshot_path = self.base_data_dir / f"{snapshot_identifier}.json"
+            elif snapshot_identifier in ["sod", "eod", "snapshot"]:
+                # Load latest of this type
+                snapshot_path = self.base_data_dir / f"latest-{snapshot_identifier}.json"
+            elif not snapshot_identifier.endswith(".json"):
+                # Add .json extension if missing
+                snapshot_path = self.base_data_dir / f"{snapshot_identifier}.json"
+            else:
+                # Full filename provided
+                snapshot_path = self.base_data_dir / snapshot_identifier
 
-        raw_path = Path(snapshot_path) / "raw.json"
-        if not raw_path.exists():
+        if not snapshot_path.exists():
             raise FileNotFoundError(f"Snapshot not found: {snapshot_path}")
 
-        with open(raw_path) as f:
+        with open(snapshot_path) as f:
             return json.load(f)

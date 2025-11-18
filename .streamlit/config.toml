@@ -1,0 +1,15 @@
+[server]
+port = 5000
+address = "127.0.0.1"
+headless = true
+enableCORS = true
+enableXsrfProtection = false
+enableWebsocketCompression = false
+
+[browser]
+gatherUsageStats = false
+serverAddress = "127.0.0.1"
+serverPort = 5000
+
+[client]
+toolbarMode = "minimal"

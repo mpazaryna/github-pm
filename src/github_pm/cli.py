@@ -78,6 +78,11 @@ def main() -> int:
         action="store_true",
         help="Save timestamped snapshot to data/ directory",
     )
+    parser.add_argument(
+        "--label",
+        default="snapshot",
+        help="Snapshot label (e.g., 'sod', 'eod', 'snapshot'). Used with --save-snapshot.",
+    )
 
     args = parser.parse_args()
 
@@ -141,7 +146,7 @@ def main() -> int:
 
         # Save timestamped snapshot if requested
         if args.save_snapshot:
-            print(f"Saving timestamped snapshot...")
+            print(f"Saving {args.label.upper()} snapshot...")
             # Create comprehensive organized data structure
             organized_data = {
                 "by_repository": organizer.organize_by_repository(all_issues),
@@ -149,10 +154,10 @@ def main() -> int:
                 "by_milestone": organizer.organize_by_milestone(all_issues),
                 "by_assignee": organizer.organize_by_assignee(all_issues),
             }
-            snapshot_dir = data_collector.create_snapshot(
-                all_issues, organized_data, config
+            snapshot_path = data_collector.create_snapshot(
+                all_issues, organized_data, config, label=args.label
             )
-            print(f"  Snapshot saved: {snapshot_dir}")
+            print(f"  Snapshot saved: {snapshot_path}")
 
         # Generate and save outputs based on format
         output_path = Path(args.output)

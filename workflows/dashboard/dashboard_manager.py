@@ -53,7 +53,7 @@ class DashboardManager:
         except (ValueError, FileNotFoundError):
             return False, None
 
-    def start(self, port: int = 5000, host: str = "127.0.0.1"):
+    def start(self, port: int = 5000, host: str = "127.0.0.1", collect_sod: bool = False):
         """Start the dashboard server."""
         is_running, pid = self.is_running()
 
@@ -62,6 +62,25 @@ class DashboardManager:
             print(f"   Running at: http://{host}:{port}")
             print(f"   Use 'stop' or 'restart' to manage it")
             return False
+
+        # Collect SOD snapshot if requested
+        if collect_sod:
+            print("📸 Collecting SOD snapshot...")
+            try:
+                result = subprocess.run(
+                    ["uv", "run", "github-pm", "--save-snapshot", "--label", "sod"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                print("   ✅ SOD snapshot collected")
+                print()
+            except subprocess.CalledProcessError as e:
+                print(f"   ❌ Failed to collect SOD snapshot: {e}")
+                print(f"   Output: {e.stdout}")
+                print(f"   Error: {e.stderr}")
+                return False
 
         print("🚀 Starting dashboard server...")
 
@@ -165,6 +184,71 @@ class DashboardManager:
         time.sleep(1)
         return self.start(port, host)
 
+    def eod(self):
+        """
+        End of Day workflow.
+
+        Collects EOD snapshot, generates daily summary, and stops dashboard.
+        """
+        print("=" * 60)
+        print("End of Day Workflow")
+        print("=" * 60)
+        print()
+
+        # Step 1: Collect EOD snapshot
+        print("📸 Collecting EOD snapshot...")
+        try:
+            result = subprocess.run(
+                ["uv", "run", "github-pm", "--save-snapshot", "--label", "eod"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            print("   ✅ EOD snapshot collected")
+        except subprocess.CalledProcessError as e:
+            print(f"   ❌ Failed to collect EOD snapshot: {e}")
+            print(f"   Output: {e.stdout}")
+            print(f"   Error: {e.stderr}")
+            return False
+
+        # Step 2: Generate daily summary (if workflow exists)
+        print()
+        print("📊 Generating daily summary...")
+        daily_summary_script = self.project_root / "workflows/planning/daily_summary.py"
+
+        if daily_summary_script.exists():
+            try:
+                result = subprocess.run(
+                    ["uv", "run", "python", str(daily_summary_script)],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                print("   ✅ Daily summary generated")
+                # Show where the report was saved
+                if "Report saved:" in result.stdout:
+                    for line in result.stdout.split("\n"):
+                        if "Report saved:" in line:
+                            print(f"   {line.strip()}")
+            except subprocess.CalledProcessError as e:
+                print(f"   ⚠️  Failed to generate daily summary: {e}")
+        else:
+            print("   ℹ️  Daily summary workflow not yet implemented")
+
+        # Step 3: Stop dashboard
+        print()
+        print("🛑 Stopping dashboard...")
+        self.stop()
+
+        print()
+        print("=" * 60)
+        print("✅ End of Day workflow complete")
+        print("=" * 60)
+
+        return True
+
     def status(self):
         """Show dashboard status."""
         is_running, pid = self.is_running()
@@ -241,7 +325,16 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # Start dashboard (reads from latest snapshot)
   uv run python workflows/dashboard/dashboard_manager.py start
+
+  # Start with SOD snapshot collection
+  uv run python workflows/dashboard/dashboard_manager.py start --sod
+
+  # End of day workflow (collect EOD snapshot, generate summary, stop)
+  uv run python workflows/dashboard/dashboard_manager.py eod
+
+  # Other commands
   uv run python workflows/dashboard/dashboard_manager.py start --port 8080
   uv run python workflows/dashboard/dashboard_manager.py stop
   uv run python workflows/dashboard/dashboard_manager.py restart
@@ -253,7 +346,7 @@ Examples:
 
     parser.add_argument(
         "command",
-        choices=["start", "stop", "restart", "status", "logs"],
+        choices=["start", "stop", "restart", "status", "logs", "eod"],
         help="Command to execute",
     )
 
@@ -268,6 +361,12 @@ Examples:
         "--host",
         default="127.0.0.1",
         help="Host to bind to (default: 127.0.0.1)",
+    )
+
+    parser.add_argument(
+        "--sod",
+        action="store_true",
+        help="Collect SOD snapshot before starting (for start command)",
     )
 
     parser.add_argument(
@@ -290,7 +389,7 @@ Examples:
     manager = DashboardManager()
 
     if args.command == "start":
-        success = manager.start(port=args.port, host=args.host)
+        success = manager.start(port=args.port, host=args.host, collect_sod=args.sod)
         sys.exit(0 if success else 1)
 
     elif args.command == "stop":
@@ -299,6 +398,10 @@ Examples:
 
     elif args.command == "restart":
         success = manager.restart(port=args.port, host=args.host)
+        sys.exit(0 if success else 1)
+
+    elif args.command == "eod":
+        success = manager.eod()
         sys.exit(0 if success else 1)
 
     elif args.command == "status":

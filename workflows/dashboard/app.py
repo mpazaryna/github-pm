@@ -10,10 +10,7 @@ import streamlit as st
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from workflows.code_analysis.daily_activity import DailyActivityReportGenerator
-from workflows.code_analysis.period_comparison import PeriodComparisonGenerator
-from workflows.metrics.velocity_tracker import VelocityTracker
-from workflows.planning.roadmap_generator import RoadmapGenerator
+from src.github_pm.data_collector import DataCollector
 
 # Page config
 st.set_page_config(
@@ -23,68 +20,46 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Initialize collectors
-@st.cache_resource
-def get_collectors():
-    """Get cached data collectors."""
-    return {
-        "activity": DailyActivityReportGenerator(),
-        "comparison": PeriodComparisonGenerator(),
-        "velocity": VelocityTracker(),
-        "roadmap": RoadmapGenerator(),
-    }
+# Initialize data collector
+data_collector = DataCollector()
 
-collectors = get_collectors()
+# Sidebar - Snapshot Selection
+st.sidebar.header("📸 Snapshot Selection")
 
-# Sidebar - Date Selection
-st.sidebar.header("📅 Period Selection")
+# Get available snapshots
+sod_snapshots = data_collector.list_snapshots("sod")
+eod_snapshots = data_collector.list_snapshots("eod")
 
-preset = st.sidebar.selectbox(
-    "Preset",
-    ["Today", "Yesterday", "Last 7 Days", "Last 14 Days", "Last 30 Days", "Last 90 Days", "Custom Range"],
+snapshot_source = st.sidebar.radio(
+    "Data Source",
+    ["Latest SOD", "Latest EOD", "Select Date"],
     index=0,
 )
 
-# Calculate dates based on preset
-now = datetime.now()
-if preset == "Today":
-    since_date = now - timedelta(days=1)
-    until_date = now
-elif preset == "Yesterday":
-    until_date = now - timedelta(days=1)
-    since_date = until_date - timedelta(days=1)
-elif preset == "Last 7 Days":
-    since_date = now - timedelta(days=7)
-    until_date = now
-elif preset == "Last 14 Days":
-    since_date = now - timedelta(days=14)
-    until_date = now
-elif preset == "Last 30 Days":
-    since_date = now - timedelta(days=30)
-    until_date = now
-elif preset == "Last 90 Days":
-    since_date = now - timedelta(days=90)
-    until_date = now
-else:  # Custom Range
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        since_date = st.date_input(
-            "From",
-            value=now - timedelta(days=7),
-            max_value=now,
-        )
-    with col2:
-        until_date = st.date_input(
-            "To",
-            value=now,
-            max_value=now,
-        )
+# Determine which snapshot to load
+snapshot_identifier = None
 
-# Convert to strings
-since = since_date.strftime("%Y-%m-%d")
-until = until_date.strftime("%Y-%m-%d")
+if snapshot_source == "Latest SOD":
+    snapshot_identifier = "sod"
+    snapshot_label = "SOD"
+elif snapshot_source == "Latest EOD":
+    snapshot_identifier = "eod"
+    snapshot_label = "EOD"
+else:  # Select Date
+    available_dates = sorted(set(
+        [s.stem.rsplit('-', 1)[0] for s in sod_snapshots + eod_snapshots]
+    ), reverse=True)
 
-st.sidebar.info(f"📆 **{since}** to **{until}**")
+    if available_dates:
+        selected_date = st.sidebar.selectbox("Date", available_dates)
+        snapshot_type = st.sidebar.radio("Type", ["SOD", "EOD"])
+        snapshot_identifier = f"{selected_date}-{snapshot_type.lower()}"
+        snapshot_label = f"{snapshot_type} ({selected_date})"
+    else:
+        st.sidebar.error("No snapshots available. Run `uv run dashboard start --sod` first.")
+        st.stop()
+
+st.sidebar.info(f"📸 **{snapshot_label}**")
 
 # Refresh button
 if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
@@ -94,246 +69,246 @@ if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
 # Main content
 st.title("📊 Dashboard")
 
-# Load data with caching
+# Load snapshot data
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def load_activity_data(since_str, until_str):
-    """Load activity data."""
-    since_dt = datetime.strptime(since_str, "%Y-%m-%d")
-    until_dt = datetime.strptime(until_str, "%Y-%m-%d")
-    days = (until_dt - since_dt).days
-
+def load_snapshot_data(snapshot_id):
+    """Load data from snapshot file."""
     try:
-        data = collectors["activity"].generate_report(
-            "config/collection/production.yaml",
-            days=max(days, 1),
-            format_type="both",
-        )
-        return {
-            "commits": data["totals"]["commits"],
-            "issues": len(data["totals"]["issues_referenced"]),
-            "repos_active": len(data["repositories"]),
-            "conventional_pct": (
-                (data["totals"]["conventional_commits"] / data["totals"]["commits"] * 100)
-                if data["totals"]["commits"] > 0
-                else 0
-            ),
-            "repositories": data["repositories"],
-            "commit_types": data["totals"]["commit_types"],
-        }
+        snapshot = data_collector.load_snapshot(snapshot_id)
+        return snapshot
+    except FileNotFoundError:
+        st.error(f"Snapshot not found: {snapshot_id}")
+        st.error("Please run `uv run dashboard start --sod` to create a snapshot first.")
+        return None
     except Exception as e:
-        st.error(f"Error loading activity data: {e}")
+        st.error(f"Error loading snapshot: {e}")
         return None
 
-@st.cache_data(ttl=300)
-def load_comparison_data(since_str, until_str):
-    """Load comparison data."""
-    since_dt = datetime.strptime(since_str, "%Y-%m-%d")
-    until_dt = datetime.strptime(until_str, "%Y-%m-%d")
-    days = (until_dt - since_dt).days
-
-    try:
-        comparison = collectors["comparison"].compare_periods(
-            "config/collection/production.yaml",
-            days=max(days, 1),
-        )
-        return {
-            "current_commits": comparison["changes"]["commits"]["current"],
-            "previous_commits": comparison["changes"]["commits"]["previous"],
-            "commit_change": comparison["changes"]["commits"]["difference"],
-            "current_issues": comparison["changes"]["issues"]["current"],
-            "previous_issues": comparison["changes"]["issues"]["previous"],
-            "issue_change": comparison["changes"]["issues"]["current"] - comparison["changes"]["issues"]["previous"],
-        }
-    except Exception as e:
-        st.error(f"Error loading comparison data: {e}")
+def parse_snapshot_for_dashboard(snapshot):
+    """Parse snapshot data for dashboard display."""
+    if not snapshot:
         return None
 
-@st.cache_data(ttl=300)
-def load_velocity_data():
-    """Load velocity data."""
-    try:
-        report = collectors["velocity"].generate_velocity_report(
-            "config/collection/production.yaml",
-            cycles=6,
-            cycle_length=7,
-        )
-        return {
-            "avg_issues": report["averages"]["issues_per_cycle"],
-            "avg_commits": report["averages"]["commits_per_cycle"],
-            "quality_pct": report["averages"]["conventional_percentage"],
-            "trend": report["trends"]["velocity"]["trend"] if report.get("trends") else "unknown",
-        }
-    except Exception as e:
-        st.error(f"Error loading velocity data: {e}")
-        return None
+    issues = snapshot.get("issues", [])
+    summary = snapshot.get("summary", {})
+    metadata = snapshot.get("metadata", {})
 
-@st.cache_data(ttl=300)
-def load_roadmap_data():
-    """Load roadmap data."""
-    try:
-        roadmap = collectors["roadmap"].generate_roadmap(
-            "config/collection/production.yaml",
-            velocity_days=30,
-        )
+    # Count issues by state
+    open_issues = sum(1 for issue in issues if issue.get("state") == "OPEN")
+    closed_issues = sum(1 for issue in issues if issue.get("state") == "CLOSED")
 
-        critical = [
-            m for m in roadmap["all_milestones"]
-            if m["health"] in ["overdue", "at_risk"]
-        ]
+    # Count by status labels (from GitHub Projects synced labels)
+    # Note: "done" is determined by CLOSED state, not a label
+    status_counts = {"backlog": 0, "ready": 0, "in_progress": 0, "in_review": 0, "done": closed_issues}
 
-        return {
-            "total_milestones": len(roadmap["all_milestones"]),
-            "open_milestones": sum(1 for m in roadmap["all_milestones"] if m["state"] == "open"),
-            "critical_milestones": critical,
-        }
-    except Exception as e:
-        st.error(f"Error loading roadmap data: {e}")
-        return None
+    for issue in issues:
+        # Only count OPEN issues in workflow states
+        if issue.get("state") != "OPEN":
+            continue
 
-# Load all data
-with st.spinner("Loading dashboard data..."):
-    activity = load_activity_data(since, until)
-    comparison = load_comparison_data(since, until)
-    velocity = load_velocity_data()
-    roadmap = load_roadmap_data()
+        labels = [l.get("name", "").lower() for l in issue.get("labels", [])]
 
-# Metrics Row 1 - Activity
-if activity:
-    col1, col2, col3, col4 = st.columns(4)
+        # Check for status:* labels (supports multiple formats)
+        if any("status:ready" in l or l == "ready" for l in labels):
+            status_counts["ready"] += 1
+        elif any("status:progress" in l or "status:in progress" in l or "status:wip" in l or "in progress" in l or l == "wip" for l in labels):
+            status_counts["in_progress"] += 1
+        elif any("status:review" in l or "status:in review" in l or "in review" in l for l in labels):
+            status_counts["in_review"] += 1
+        elif any("status:backlog" in l or l == "backlog" for l in labels):
+            status_counts["backlog"] += 1
+        else:
+            # No status label = backlog by default
+            status_counts["backlog"] += 1
 
-    with col1:
-        st.metric(
-            "Commits",
-            activity["commits"],
-            delta=comparison["commit_change"] if comparison else None,
-        )
+    # Count by label type
+    label_counts = {}
+    for issue in issues:
+        for label in issue.get("labels", []):
+            label_name = label.get("name", "")
+            label_counts[label_name] = label_counts.get(label_name, 0) + 1
 
-    with col2:
-        st.metric(
-            "Issues Worked On",
-            activity["issues"],
-            delta=comparison["issue_change"] if comparison else None,
-        )
+    # Get repositories
+    repos = summary.get("by_repository", {})
 
-    with col3:
-        st.metric(
-            "Active Repos",
-            activity["repos_active"],
-        )
+    return {
+        "metadata": metadata,
+        "total_issues": len(issues),
+        "open_issues": open_issues,
+        "closed_issues": closed_issues,
+        "status_counts": status_counts,
+        "label_counts": label_counts,
+        "repos_active": len(repos),
+        "repositories": repos,
+        "issues": issues,
+    }
 
-    with col4:
-        st.metric(
-            "Code Quality",
-            f"{activity['conventional_pct']:.1f}%",
-        )
+# Load snapshot data
+with st.spinner("Loading snapshot data..."):
+    snapshot = load_snapshot_data(snapshot_identifier)
+    data = parse_snapshot_for_dashboard(snapshot)
+
+    if not data:
+        st.error("Failed to load snapshot data")
+        st.stop()
+
+# Metrics Row 1 - Issue Status
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric(
+        "Total Issues",
+        data["total_issues"],
+    )
+
+with col2:
+    st.metric(
+        "Open Issues",
+        data["open_issues"],
+    )
+
+with col3:
+    st.metric(
+        "Active Repos",
+        data["repos_active"],
+    )
+
+with col4:
+    snapshot_date = data["metadata"].get("snapshot_date", "Unknown")
+    snapshot_type = data["metadata"].get("snapshot_type", "Unknown")
+    st.metric(
+        "Snapshot",
+        snapshot_type,
+        delta=snapshot_date,
+    )
 
 st.divider()
 
-# Metrics Row 2 - Velocity & Roadmap
-col1, col2, col3, col4 = st.columns(4)
+# Metrics Row 2 - Status Flow
+st.info("ℹ️ **Status Flow**: Add `status:ready`, `status:progress` (or `status:in progress`), `status:review` (or `status:in review`) labels to track workflow. Open issues without labels = Backlog. Closed issues = Done.")
 
-if velocity:
-    with col1:
-        trend_emoji = {"improving": "📈", "declining": "📉", "stable": "➡️"}.get(velocity["trend"], "❓")
-        st.metric(
-            "Avg Issues/Week",
-            f"{velocity['avg_issues']:.1f}",
-            delta=f"{trend_emoji} {velocity['trend']}",
-        )
+col1, col2, col3, col4, col5 = st.columns(5)
 
-    with col2:
-        st.metric(
-            "Avg Commits/Week",
-            f"{velocity['avg_commits']:.1f}",
-        )
+with col1:
+    st.metric(
+        "Backlog",
+        data["status_counts"]["backlog"],
+        help="Open issues without workflow status labels",
+    )
 
-if roadmap:
-    with col3:
-        st.metric(
-            "Total Milestones",
-            roadmap["total_milestones"],
-        )
+with col2:
+    st.metric(
+        "Ready",
+        data["status_counts"]["ready"],
+        help="Open issues labeled 'status:ready'",
+    )
 
-    with col4:
-        critical_count = len(roadmap["critical_milestones"])
-        st.metric(
-            "Critical Milestones",
-            critical_count,
-            delta="Needs attention" if critical_count > 0 else "All on track",
-            delta_color="inverse" if critical_count > 0 else "normal",
-        )
+with col3:
+    st.metric(
+        "In Progress",
+        data["status_counts"]["in_progress"],
+        help="Open issues labeled 'status:in progress'",
+    )
+
+with col4:
+    st.metric(
+        "In Review",
+        data["status_counts"]["in_review"],
+        help="Open issues labeled 'status:in review'",
+    )
+
+with col5:
+    st.metric(
+        "Done",
+        data["status_counts"]["done"],
+        help="Closed issues (no label needed)",
+    )
 
 st.divider()
 
 # Two column layout
 col1, col2 = st.columns(2)
 
-# Work Distribution Chart
+# Label Distribution Chart
 with col1:
-    st.subheader("🔨 Work Distribution")
-    if activity and activity["commit_types"]:
-        import pandas as pd
+    st.subheader("🏷️ Label Distribution")
+    import pandas as pd
 
-        df = pd.DataFrame(
-            list(activity["commit_types"].items()),
-            columns=["Type", "Count"],
-        )
-        st.bar_chart(df.set_index("Type"))
+    if data["label_counts"]:
+        # Show top 10 labels
+        sorted_labels = sorted(data["label_counts"].items(), key=lambda x: x[1], reverse=True)[:10]
+        label_df = pd.DataFrame(sorted_labels, columns=["Label", "Count"])
+        st.bar_chart(label_df.set_index("Label"))
     else:
-        st.info("No commit data available for this period")
+        st.info("No labels found in issues")
 
 # Repository Activity
 with col2:
     st.subheader("📂 Repository Activity")
-    if activity and activity["repositories"]:
+    if data["repositories"]:
         import pandas as pd
 
-        repo_data = {
-            name: info["total_commits"]
-            for name, info in activity["repositories"].items()
-        }
-
-        df = pd.DataFrame(
-            list(repo_data.items()),
-            columns=["Repository", "Commits"],
-        ).sort_values("Commits", ascending=False)
+        repo_df = pd.DataFrame(
+            list(data["repositories"].items()),
+            columns=["Repository", "Issues"],
+        ).sort_values("Issues", ascending=False)
 
         st.dataframe(
-            df,
+            repo_df,
             use_container_width=True,
             hide_index=True,
         )
     else:
-        st.info("No repository activity for this period")
+        st.info("No repository data in this snapshot")
 
-# Critical Milestones
-if roadmap and roadmap["critical_milestones"]:
-    st.divider()
-    st.subheader("⚠️ Critical Milestones")
+# Issues Table
+st.divider()
+st.subheader("📋 Issues")
 
-    for milestone in roadmap["critical_milestones"]:
-        health_emoji = "❌" if milestone["health"] == "overdue" else "🟠"
+if data["issues"]:
+    # Filter options
+    col1, col2 = st.columns(2)
 
-        with st.expander(f"{health_emoji} {milestone['title']} - {milestone['repository']}"):
-            col1, col2, col3 = st.columns(3)
+    with col1:
+        state_filter = st.selectbox("State", ["All", "OPEN", "CLOSED"])
+
+    with col2:
+        repo_filter = st.selectbox("Repository", ["All"] + sorted(data["repositories"].keys()))
+
+    # Filter issues
+    filtered_issues = data["issues"]
+
+    if state_filter != "All":
+        filtered_issues = [i for i in filtered_issues if i.get("state") == state_filter]
+
+    if repo_filter != "All":
+        filtered_issues = [i for i in filtered_issues if i.get("repository") == repo_filter]
+
+    # Display issues
+    st.caption(f"Showing {len(filtered_issues)} of {len(data['issues'])} issues")
+
+    for issue in filtered_issues[:20]:  # Show first 20
+        state_emoji = "🟢" if issue.get("state") == "OPEN" else "⚪"
+        labels = ", ".join([l.get("name", "") for l in issue.get("labels", [])[:3]])
+
+        with st.expander(f"{state_emoji} #{issue.get('number')} - {issue.get('title')}"):
+            col1, col2 = st.columns(2)
 
             with col1:
-                st.metric("Progress", f"{milestone['progress_percentage']:.0f}%")
+                st.caption(f"**Repository:** {issue.get('repository', 'Unknown')}")
+                st.caption(f"**State:** {issue.get('state', 'Unknown')}")
 
             with col2:
-                st.metric("Completed", f"{milestone['completed']}/{milestone['total_issues']}")
+                if labels:
+                    st.caption(f"**Labels:** {labels}")
+                if issue.get("milestone"):
+                    st.caption(f"**Milestone:** {issue['milestone'].get('title', 'Unknown')}")
 
-            with col3:
-                if milestone["health"] == "overdue":
-                    st.metric("Status", f"Overdue by {abs(milestone['days_until_due'])} days")
-                else:
-                    st.metric("Predicted", f"{milestone['predicted_days_remaining']} days remaining")
+            if issue.get("url"):
+                st.caption(f"[View on GitHub]({issue['url']})")
 
-            # Progress bar
-            st.progress(milestone["progress_percentage"] / 100)
-
-            if milestone.get("description"):
-                st.caption(milestone["description"])
+else:
+    st.info("No issues in this snapshot")
 
 # Footer
 st.divider()
