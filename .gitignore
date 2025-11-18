@@ -79,6 +79,8 @@ config/collection/production.yaml
 
 # Generated data and reports
 data/*/
+data/*.json
+data/latest*
 !data/.gitkeep
 reports/daily/
 reports/weekly/
@@ -87,3 +89,7 @@ reports/adhoc/
 *.md.report
 github-issues-report.md
 github-issues-report.json
+
+# Dashboard runtime files
+.dashboard.log
+.dashboard.pid
