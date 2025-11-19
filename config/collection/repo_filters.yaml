@@ -1,0 +1,64 @@
+# Repository Discovery Filters
+# Used by scripts/sync_repos.py to automatically discover and filter repositories
+
+# GitHub user/org to fetch repos from
+owner: mpazaryna
+
+# Include repos from these additional owners (e.g., orgs you contribute to)
+additional_owners:
+  - j-bouchard
+
+# Filter options
+filters:
+  # Exclude forked repositories
+  exclude_forks: true
+
+  # Exclude archived repositories
+  exclude_archived: true
+
+  # Include only these visibility levels (public, private, internal)
+  # Empty list = include all visibility levels
+  visibility: []
+
+  # Include only repos with these topics (empty = all topics)
+  # Examples: python, typescript, machine-learning
+  include_topics: []
+
+  # Exclude repos with these topics
+  exclude_topics:
+    - archived
+    - deprecated
+    - template
+
+  # Include only repos with these languages (empty = all languages)
+  # Examples: Python, TypeScript, JavaScript, Go
+  include_languages: []
+
+  # Exclude repos with these languages
+  exclude_languages: []
+
+  # Minimum number of days since last update (0 = include all)
+  # Set to 90 to exclude repos not updated in 3 months
+  min_days_since_update: 0
+
+  # Maximum age in days (0 = include all)
+  # Set to 365 to exclude repos older than 1 year
+  max_age_days: 0
+
+# Manual overrides
+overrides:
+  # Force include these repos even if they don't match filters
+  force_include: []
+    # - owner: mpazaryna
+    #   name: special-repo
+
+  # Force exclude these repos even if they match filters
+  force_exclude: []
+    # - owner: mpazaryna
+    #   name: test-repo
+
+# Collection settings (inherited by generated config)
+collection:
+  issue_state: open  # open, closed, or all
+  labels: []  # Filter issues by labels
+  limit: 100  # Max issues per repo

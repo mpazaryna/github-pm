@@ -226,89 +226,327 @@ with col5:
 
 st.divider()
 
-# Two column layout
-col1, col2 = st.columns(2)
+# Tabbed Interface
+tab1, tab2, tab3 = st.tabs(["📊 Overview", "📂 Repository Activity", "📋 Issues"])
 
-# Label Distribution Chart
-with col1:
-    st.subheader("🏷️ Label Distribution")
-    import pandas as pd
+# ============================================================================
+# TAB 1: Overview
+# ============================================================================
+with tab1:
+    st.subheader("Overview")
 
-    if data["label_counts"]:
-        # Show top 10 labels
-        sorted_labels = sorted(data["label_counts"].items(), key=lambda x: x[1], reverse=True)[:10]
-        label_df = pd.DataFrame(sorted_labels, columns=["Label", "Count"])
-        st.bar_chart(label_df.set_index("Label"))
-    else:
-        st.info("No labels found in issues")
+    # Two column layout
+    col1, col2 = st.columns(2)
 
-# Repository Activity
-with col2:
-    st.subheader("📂 Repository Activity")
+    # Label Distribution Chart
+    with col1:
+        st.markdown("### 🏷️ Label Distribution")
+        import pandas as pd
+
+        if data["label_counts"]:
+            # Show top 10 labels
+            sorted_labels = sorted(data["label_counts"].items(), key=lambda x: x[1], reverse=True)[:10]
+            label_df = pd.DataFrame(sorted_labels, columns=["Label", "Count"])
+            st.bar_chart(label_df.set_index("Label"))
+        else:
+            st.info("No labels found in issues")
+
+    # Repository Summary
+    with col2:
+        st.markdown("### 📂 Repository Summary")
+        if data["repositories"]:
+            import pandas as pd
+
+            # Add GitHub URLs
+            repo_data = []
+            for repo_name, issue_count in data["repositories"].items():
+                repo_data.append({
+                    "Repository": repo_name,
+                    "GitHub": f"https://github.com/{repo_name}",
+                    "Issues": issue_count,
+                })
+
+            repo_df = pd.DataFrame(repo_data).sort_values("Issues", ascending=False)
+
+            # Show top 10 repos
+            st.dataframe(
+                repo_df.head(10),
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Repository": st.column_config.TextColumn("Repository", width="medium"),
+                    "GitHub": st.column_config.LinkColumn("GitHub", width="small", display_text="🔗"),
+                    "Issues": st.column_config.NumberColumn("Issues", format="%d"),
+                },
+            )
+
+            if len(repo_df) > 10:
+                st.caption(f"Showing top 10 of {len(repo_df)} repositories. See 'Repository Activity' tab for full list.")
+        else:
+            st.info("No repository data in this snapshot")
+
+# ============================================================================
+# TAB 2: Repository Activity
+# ============================================================================
+with tab2:
+    st.subheader("Repository Activity")
+
     if data["repositories"]:
         import pandas as pd
 
-        repo_df = pd.DataFrame(
-            list(data["repositories"].items()),
-            columns=["Repository", "Issues"],
-        ).sort_values("Issues", ascending=False)
+        # Create detailed repository dataframe
+        repo_data = []
+        for repo_name, issue_count in data["repositories"].items():
+            # Calculate additional stats for this repo
+            repo_issues = [i for i in data["issues"] if i.get("repository") == repo_name]
+            open_count = sum(1 for i in repo_issues if i.get("state") == "OPEN")
+            closed_count = sum(1 for i in repo_issues if i.get("state") == "CLOSED")
 
+            # Get unique labels for this repo
+            labels = set()
+            for issue in repo_issues:
+                for label in issue.get("labels", []):
+                    labels.add(label.get("name", ""))
+
+            # Get unique assignees
+            assignees = set()
+            for issue in repo_issues:
+                for assignee in issue.get("assignees", []):
+                    assignees.add(assignee.get("login", ""))
+
+            # Construct GitHub URL
+            github_url = f"https://github.com/{repo_name}"
+
+            repo_data.append({
+                "Repository": repo_name,
+                "GitHub": github_url,
+                "Total Issues": issue_count,
+                "Open": open_count,
+                "Closed": closed_count,
+                "Labels": len(labels),
+                "Assignees": len(assignees),
+            })
+
+        repo_df = pd.DataFrame(repo_data).sort_values("Total Issues", ascending=False)
+
+        # Display metrics
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric("Total Repositories", len(repo_df))
+
+        with col2:
+            avg_issues = repo_df["Total Issues"].mean()
+            st.metric("Avg Issues/Repo", f"{avg_issues:.1f}")
+
+        with col3:
+            active_repos = len(repo_df[repo_df["Open"] > 0])
+            st.metric("Repos with Open Issues", active_repos)
+
+        with col4:
+            max_issues = repo_df["Total Issues"].max()
+            busiest_repo = repo_df[repo_df["Total Issues"] == max_issues].iloc[0]["Repository"]
+            st.metric("Busiest Repository", busiest_repo, delta=f"{max_issues} issues")
+
+        st.divider()
+
+        # Search/Filter
+        col1, col2, col3 = st.columns([2, 1, 1])
+
+        with col1:
+            search_query = st.text_input("🔍 Search repositories", placeholder="Type to filter...")
+
+        with col2:
+            min_issues = st.number_input("Min issues", min_value=0, value=0)
+
+        with col3:
+            show_only_open = st.checkbox("Only repos with open issues", value=False)
+
+        # Apply filters
+        filtered_df = repo_df.copy()
+
+        if search_query:
+            filtered_df = filtered_df[filtered_df["Repository"].str.contains(search_query, case=False)]
+
+        if min_issues > 0:
+            filtered_df = filtered_df[filtered_df["Total Issues"] >= min_issues]
+
+        if show_only_open:
+            filtered_df = filtered_df[filtered_df["Open"] > 0]
+
+        st.caption(f"Showing {len(filtered_df)} of {len(repo_df)} repositories")
+
+        # Display table with enhanced styling
         st.dataframe(
-            repo_df,
+            filtered_df,
             use_container_width=True,
             hide_index=True,
+            column_config={
+                "Repository": st.column_config.TextColumn("Repository", width="medium"),
+                "GitHub": st.column_config.LinkColumn("GitHub", width="small", display_text="🔗 View"),
+                "Total Issues": st.column_config.NumberColumn("Total Issues", format="%d"),
+                "Open": st.column_config.NumberColumn("Open", format="%d"),
+                "Closed": st.column_config.NumberColumn("Closed", format="%d"),
+                "Labels": st.column_config.NumberColumn("Labels", format="%d"),
+                "Assignees": st.column_config.NumberColumn("Assignees", format="%d"),
+            },
         )
+
+        # Repository details drill-down
+        st.divider()
+        st.markdown("### 🔍 Repository Details")
+
+        selected_repo = st.selectbox(
+            "Select a repository to view details",
+            options=sorted(data["repositories"].keys()),
+            key="repo_detail_select"
+        )
+
+        if selected_repo:
+            repo_issues = [i for i in data["issues"] if i.get("repository") == selected_repo]
+
+            # Repository stats
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                open_count = sum(1 for i in repo_issues if i.get("state") == "OPEN")
+                st.metric("Open Issues", open_count)
+
+            with col2:
+                closed_count = sum(1 for i in repo_issues if i.get("state") == "CLOSED")
+                st.metric("Closed Issues", closed_count)
+
+            with col3:
+                # Count issues with milestones
+                with_milestone = sum(1 for i in repo_issues if i.get("milestone"))
+                st.metric("With Milestone", with_milestone)
+
+            with col4:
+                # Count assigned issues
+                assigned = sum(1 for i in repo_issues if i.get("assignees"))
+                st.metric("Assigned", assigned)
+
+            # Issue list for this repo
+            st.markdown(f"**Recent Issues ({len(repo_issues[:10])} of {len(repo_issues)})**")
+
+            for issue in repo_issues[:10]:
+                state_emoji = "🟢" if issue.get("state") == "OPEN" else "⚪"
+                labels = ", ".join([l.get("name", "") for l in issue.get("labels", [])[:3]])
+
+                with st.expander(f"{state_emoji} #{issue.get('number')} - {issue.get('title')}"):
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        st.caption(f"**State:** {issue.get('state', 'Unknown')}")
+                        if issue.get("milestone"):
+                            st.caption(f"**Milestone:** {issue['milestone'].get('title', 'Unknown')}")
+
+                    with col2:
+                        if labels:
+                            st.caption(f"**Labels:** {labels}")
+                        if issue.get("assignees"):
+                            assignee_names = ", ".join([a.get("login", "") for a in issue["assignees"][:3]])
+                            st.caption(f"**Assignees:** {assignee_names}")
+
+                    if issue.get("url"):
+                        st.caption(f"[View on GitHub]({issue['url']})")
+
     else:
         st.info("No repository data in this snapshot")
 
-# Issues Table
-st.divider()
-st.subheader("📋 Issues")
+# ============================================================================
+# TAB 3: Issues
+# ============================================================================
+with tab3:
+    st.subheader("Issues")
 
-if data["issues"]:
-    # Filter options
-    col1, col2 = st.columns(2)
+    if data["issues"]:
+        # Filter options
+        col1, col2, col3 = st.columns(3)
 
-    with col1:
-        state_filter = st.selectbox("State", ["All", "OPEN", "CLOSED"])
+        with col1:
+            state_filter = st.selectbox("State", ["All", "OPEN", "CLOSED"], key="issue_state_filter")
 
-    with col2:
-        repo_filter = st.selectbox("Repository", ["All"] + sorted(data["repositories"].keys()))
+        with col2:
+            repo_filter = st.selectbox("Repository", ["All"] + sorted(data["repositories"].keys()), key="issue_repo_filter")
 
-    # Filter issues
-    filtered_issues = data["issues"]
+        with col3:
+            # Get all unique labels
+            all_labels = set()
+            for issue in data["issues"]:
+                for label in issue.get("labels", []):
+                    all_labels.add(label.get("name", ""))
 
-    if state_filter != "All":
-        filtered_issues = [i for i in filtered_issues if i.get("state") == state_filter]
+            label_filter = st.selectbox("Label", ["All"] + sorted(all_labels), key="issue_label_filter")
 
-    if repo_filter != "All":
-        filtered_issues = [i for i in filtered_issues if i.get("repository") == repo_filter]
+        # Search
+        search_query = st.text_input("🔍 Search issues", placeholder="Search by title...", key="issue_search")
 
-    # Display issues
-    st.caption(f"Showing {len(filtered_issues)} of {len(data['issues'])} issues")
+        # Filter issues
+        filtered_issues = data["issues"]
 
-    for issue in filtered_issues[:20]:  # Show first 20
-        state_emoji = "🟢" if issue.get("state") == "OPEN" else "⚪"
-        labels = ", ".join([l.get("name", "") for l in issue.get("labels", [])[:3]])
+        if state_filter != "All":
+            filtered_issues = [i for i in filtered_issues if i.get("state") == state_filter]
 
-        with st.expander(f"{state_emoji} #{issue.get('number')} - {issue.get('title')}"):
-            col1, col2 = st.columns(2)
+        if repo_filter != "All":
+            filtered_issues = [i for i in filtered_issues if i.get("repository") == repo_filter]
 
-            with col1:
-                st.caption(f"**Repository:** {issue.get('repository', 'Unknown')}")
-                st.caption(f"**State:** {issue.get('state', 'Unknown')}")
+        if label_filter != "All":
+            filtered_issues = [
+                i for i in filtered_issues
+                if any(l.get("name") == label_filter for l in i.get("labels", []))
+            ]
 
-            with col2:
-                if labels:
-                    st.caption(f"**Labels:** {labels}")
-                if issue.get("milestone"):
-                    st.caption(f"**Milestone:** {issue['milestone'].get('title', 'Unknown')}")
+        if search_query:
+            filtered_issues = [
+                i for i in filtered_issues
+                if search_query.lower() in i.get("title", "").lower()
+            ]
 
-            if issue.get("url"):
-                st.caption(f"[View on GitHub]({issue['url']})")
+        # Display count
+        st.caption(f"Showing {len(filtered_issues)} of {len(data['issues'])} issues")
 
-else:
-    st.info("No issues in this snapshot")
+        # Pagination
+        issues_per_page = 20
+        total_pages = (len(filtered_issues) + issues_per_page - 1) // issues_per_page
+
+        if total_pages > 1:
+            page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, key="issue_page")
+            start_idx = (page - 1) * issues_per_page
+            end_idx = start_idx + issues_per_page
+            page_issues = filtered_issues[start_idx:end_idx]
+            st.caption(f"Page {page} of {total_pages}")
+        else:
+            page_issues = filtered_issues[:issues_per_page]
+
+        # Display issues
+        for issue in page_issues:
+            state_emoji = "🟢" if issue.get("state") == "OPEN" else "⚪"
+            labels = ", ".join([l.get("name", "") for l in issue.get("labels", [])[:3]])
+
+            with st.expander(f"{state_emoji} #{issue.get('number')} - {issue.get('title')}"):
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.caption(f"**Repository:** {issue.get('repository', 'Unknown')}")
+                    st.caption(f"**State:** {issue.get('state', 'Unknown')}")
+                    if issue.get("createdAt"):
+                        st.caption(f"**Created:** {issue['createdAt'][:10]}")
+
+                with col2:
+                    if labels:
+                        st.caption(f"**Labels:** {labels}")
+                    if issue.get("milestone"):
+                        st.caption(f"**Milestone:** {issue['milestone'].get('title', 'Unknown')}")
+                    if issue.get("assignees"):
+                        assignee_names = ", ".join([a.get("login", "") for a in issue["assignees"][:3]])
+                        st.caption(f"**Assignees:** {assignee_names}")
+
+                if issue.get("url"):
+                    st.caption(f"[View on GitHub]({issue['url']})")
+
+    else:
+        st.info("No issues in this snapshot")
 
 # Footer
 st.divider()

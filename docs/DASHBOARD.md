@@ -5,11 +5,16 @@ The GitHub PM Dashboard provides real-time visualization of project metrics, act
 ## Overview
 
 The dashboard is built with Streamlit, offering an interactive web interface for exploring:
-- Commit activity and trends
-- Issue tracking and velocity
-- Repository health metrics
-- Milestone progress and predictions
-- Work distribution patterns
+- Issue status and workflow tracking
+- Repository activity and health metrics
+- Label distribution analysis
+- SOD/EOD snapshot comparison
+- Detailed issue drill-down and search
+
+The dashboard uses a **tabbed interface** with three main views:
+- **Overview Tab**: High-level metrics, label distribution, and repository summary
+- **Repository Activity Tab**: Detailed repository statistics with drill-down capabilities
+- **Issues Tab**: Comprehensive issue listing with advanced filters and search
 
 ## Architecture
 
@@ -143,84 +148,105 @@ uv run dashboard logs --follow
 
 ## Dashboard Features
 
-### Date Selection
+### Snapshot Selection (Sidebar)
 
-**Sidebar controls for flexible time ranges:**
+**Choose data source for visualization:**
 
-- **Presets:**
-  - Today (last 24 hours)
-  - Yesterday
-  - Last 7 Days
-  - Last 14 Days
-  - Last 30 Days
-  - Last 90 Days
-  - Custom Range (date picker)
+- **Latest SOD**: Most recent Start of Day snapshot
+- **Latest EOD**: Most recent End of Day snapshot
+- **Select Date**: Choose specific date and type (SOD/EOD)
 
-- **Refresh Button:** Clear cache and reload all data
+**Refresh Button**: Clear cache and reload data
 
-### Activity Metrics (Row 1)
+### Main Dashboard Metrics (Always Visible)
 
-Four key metrics with trend indicators:
+**Row 1: Issue Status**
+1. **Total Issues**: Count of all issues in snapshot
+2. **Open Issues**: Currently open issues
+3. **Active Repos**: Repositories with issues
+4. **Snapshot Info**: Type and date of loaded snapshot
 
-1. **Commits**
-   - Total commits in selected period
-   - Delta shows change vs previous period
+**Row 2: Status Flow**
 
-2. **Issues Worked On**
-   - Count of unique issues referenced in commits
-   - Delta shows change vs previous period
+Tracks issue workflow with labels:
+1. **Backlog**: Open issues without workflow labels
+2. **Ready**: Issues labeled `status:ready`
+3. **In Progress**: Issues labeled `status:in progress` or `status:progress`
+4. **In Review**: Issues labeled `status:in review` or `status:review`
+5. **Done**: Closed issues (any state)
 
-3. **Active Repos**
-   - Number of repositories with commits
+### Tab 1: Overview
 
-4. **Code Quality**
-   - Percentage of conventional commits
-   - Measures adherence to commit standards
+High-level summary of project health.
 
-### Velocity & Roadmap Metrics (Row 2)
+**Label Distribution Chart**
+- Bar chart of top 10 issue labels
+- Shows label usage patterns
+- Helps identify common issue types
 
-1. **Avg Issues/Week**
-   - Rolling average over 6 cycles
-   - Trend indicator (📈 improving, ➡️ stable, 📉 declining)
+**Repository Summary Table**
+- Top 10 repositories by issue count
+- Shows repository name, GitHub link (🔗), and issue count
+- Click link icon to open repository on GitHub
+- Link to full details in Repository Activity tab
 
-2. **Avg Commits/Week**
-   - Rolling average over 6 cycles
+### Tab 2: Repository Activity
 
-3. **Total Milestones**
-   - Count across all repositories
+Detailed repository analysis with drill-down capabilities.
 
-4. **Critical Milestones**
-   - Count of overdue or at-risk milestones
-   - Color-coded alert when > 0
+**Repository Metrics**
+1. **Total Repositories**: Count of all repos
+2. **Avg Issues/Repo**: Average issue distribution
+3. **Repos with Open Issues**: Active repositories
+4. **Busiest Repository**: Repo with most issues
 
-### Work Distribution Chart
+**Enhanced Repository Table**
 
-Bar chart showing commit breakdown by type:
-- `feat` - New features
-- `fix` - Bug fixes
-- `docs` - Documentation
-- `refactor` - Code refactoring
-- `test` - Testing
-- `chore` - Maintenance
-- Other types as configured
-
-### Repository Activity Table
-
-Sortable table showing:
+Columns:
 - Repository name
-- Commit count for selected period
-- Sorted by activity (most active first)
+- GitHub link (🔗 View) - click to open repo on GitHub
+- Total issues
+- Open/Closed breakdown
+- Unique labels count
+- Unique assignees count
 
-### Critical Milestones Section
+**Filters:**
+- 🔍 Search by repository name
+- Min issues threshold
+- Show only repos with open issues
 
-Expandable cards for each milestone that is:
-- **Overdue** (❌) - Past due date
-- **At Risk** (🟠) - Velocity insufficient to meet deadline
+**Repository Details Drill-Down**
 
-Each card shows:
-- Progress percentage and bar
-- Completed vs total issues
-- Days overdue or predicted days remaining
+Select any repository to view:
+- Detailed metrics (open, closed, with milestone, assigned)
+- Recent 10 issues with full details
+- Quick access to GitHub links
+
+### Tab 3: Issues
+
+Comprehensive issue listing with advanced filtering.
+
+**Filters:**
+- **State**: All, OPEN, or CLOSED
+- **Repository**: Filter by specific repo
+- **Label**: Filter by specific label
+- **Search**: Text search by issue title
+
+**Pagination:**
+- 20 issues per page
+- Page navigation for large datasets
+
+**Issue Details:**
+
+Each issue shows:
+- State (🟢 open, ⚪ closed)
+- Issue number and title
+- Repository name
+- Creation date
+- Labels (up to 3 shown)
+- Milestone (if assigned)
+- Assignees (if any)
+- Direct GitHub link
 - Milestone description
 
 ## Data Flow
