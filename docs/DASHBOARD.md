@@ -184,10 +184,11 @@ High-level summary of project health.
 - Shows label usage patterns
 - Helps identify common issue types
 
-**Repository Summary Table**
-- Top 10 repositories by issue count
-- Shows repository name, GitHub link (🔗), and issue count
-- Click link icon to open repository on GitHub
+**Repository Summary Chart**
+- Interactive donut chart showing top 10 repositories by issue count
+- Hover to see repository name, issue count, and percentage
+- Repositories beyond top 10 grouped as "Other"
+- Visual representation of issue distribution across repositories
 - Link to full details in Repository Activity tab
 
 ### Tab 2: Repository Activity

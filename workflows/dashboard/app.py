@@ -256,29 +256,53 @@ with tab1:
         st.markdown("### 📂 Repository Summary")
         if data["repositories"]:
             import pandas as pd
+            import plotly.express as px
 
-            # Add GitHub URLs
-            repo_data = []
-            for repo_name, issue_count in data["repositories"].items():
-                repo_data.append({
-                    "Repository": repo_name,
-                    "GitHub": f"https://github.com/{repo_name}",
-                    "Issues": issue_count,
-                })
+            # Prepare data for pie chart
+            repo_df = pd.DataFrame(
+                list(data["repositories"].items()),
+                columns=["Repository", "Issues"],
+            ).sort_values("Issues", ascending=False)
 
-            repo_df = pd.DataFrame(repo_data).sort_values("Issues", ascending=False)
+            # Show top 10 repos in pie chart
+            top_repos = repo_df.head(10).copy()
 
-            # Show top 10 repos
-            st.dataframe(
-                repo_df.head(10),
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Repository": st.column_config.TextColumn("Repository", width="medium"),
-                    "GitHub": st.column_config.LinkColumn("GitHub", width="small", display_text="🔗"),
-                    "Issues": st.column_config.NumberColumn("Issues", format="%d"),
-                },
+            # If there are more than 10 repos, group the rest as "Other"
+            if len(repo_df) > 10:
+                other_count = repo_df.iloc[10:]["Issues"].sum()
+                other_row = pd.DataFrame([{"Repository": "Other", "Issues": other_count}])
+                top_repos = pd.concat([top_repos, other_row], ignore_index=True)
+
+            # Create pie chart
+            fig = px.pie(
+                top_repos,
+                values="Issues",
+                names="Repository",
+                title=None,
+                hole=0.3,  # Make it a donut chart
             )
+
+            # Update layout for better appearance
+            fig.update_traces(
+                textposition='inside',
+                textinfo='percent+label',
+                hovertemplate='<b>%{label}</b><br>Issues: %{value}<br>%{percent}<extra></extra>'
+            )
+
+            fig.update_layout(
+                showlegend=True,
+                legend=dict(
+                    orientation="v",
+                    yanchor="middle",
+                    y=0.5,
+                    xanchor="left",
+                    x=1.02
+                ),
+                margin=dict(l=20, r=20, t=20, b=20),
+                height=400,
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
 
             if len(repo_df) > 10:
                 st.caption(f"Showing top 10 of {len(repo_df)} repositories. See 'Repository Activity' tab for full list.")
